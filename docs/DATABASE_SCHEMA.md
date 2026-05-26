@@ -108,7 +108,7 @@ Example manager document:
 
 ## COLLECTION: modules
 
-One document per module. 7 documents total. These are seeded once by admin setup. Content editable by admin without code deployment.
+One document per module. 8 documents total. These are seeded once by admin setup. Content editable by admin without code deployment.
 
 Document ID: module_id string (use exact IDs below)
 
@@ -120,6 +120,7 @@ Exact module IDs — use these strings everywhere across frontend, backend, and 
   module_05_physical_security
   module_06_data_handling
   module_07_social_engineering
+  module_08_financial_scams
 
 Fields:
   id: string — same as document ID
@@ -178,7 +179,7 @@ Fields:
   modules_completed: array of strings — module IDs the employee has passed
   modules_unlocked: array of strings — module IDs the employee can currently access
   badges_earned: array of badge objects
-  certificate_issued: boolean — true only after all 7 modules passed and certificate generated
+  certificate_issued: boolean — true only after all 8 modules passed and certificate generated
   certificate_id: string or null — set when certificate is generated
   certificate_issued_at: timestamp or null
   fraud_flagged: boolean — set to true by fraud detector if completion was too fast
@@ -311,9 +312,9 @@ Fields:
   tenant_name: string
   issued_at: timestamp
   valid_until: timestamp — issued_at plus tenant settings certificate_validity_days
-  modules_completed: number — always 7
+  modules_completed: number — always 8
   fraud_flagged: boolean — copied from employee_progress at time of generation
-  total_completion_minutes: number — how long it took to complete all 7 modules
+  total_completion_minutes: number — how long it took to complete all 8 modules
 
 Example document:
 {
@@ -419,7 +420,7 @@ tenants collection: no access from frontend ever
 Before running the app for the first time, these must exist in Firestore:
 
 1. One document in tenants collection with tenant_id "group-sns"
-2. Seven documents in modules collection with the exact module IDs listed above
+2. Eight documents in modules collection with the exact module IDs listed above
 3. One admin user document in users collection
 4. One employee_progress document for the admin user (even admin gets one for consistency)
 
@@ -429,7 +430,7 @@ The backend's main.py should have a seed_data() function that creates these if t
 
 ## MODULES.JS STRUCTURE FOR FRONTEND (for ChatGPT agent)
 
-The frontend has a static fallback in frontend/src/data/modules.js in case Firestore is unavailable. ChatGPT agent must format the 7 module contents from the docx into this exact JS structure:
+The frontend has a static fallback in frontend/src/data/modules.js in case Firestore is unavailable. ChatGPT agent must format the 8 module contents from the docx into this exact JS structure:
 
 export const MODULES = [
   {
@@ -449,4 +450,4 @@ export const MODULES = [
   }
 ]
 
-Repeat this structure for all 7 modules. Use the exact id strings. Keep body under 100 words per slide. Maximum 4 slides per module. Extract content from the Cyber_Security_Quiz.docx file.
+Repeat this structure for all 8 modules. Use the exact id strings. Keep body under 100 words per slide. Maximum 4 slides per module. Extract content from the Cyber_Security_Quiz.docx file.
