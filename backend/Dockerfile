@@ -12,5 +12,5 @@ COPY . .
 # Expose port
 EXPOSE 8000
 
-# Start FastAPI app with one worker
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+# Start FastAPI app with dynamic port for Railway
+CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
