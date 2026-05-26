@@ -14,7 +14,7 @@ function buildCsvRow(values) {
   return values.map(escapeCsvValue).join(',');
 }
 
-export default function ComplianceReport() {
+export default function ComplianceReport({ endpoint = '/api/admin/compliance-report', filenamePrefix = 'cybershield-compliance' }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -23,7 +23,7 @@ export default function ComplianceReport() {
     setError('');
 
     try {
-      const response = await axiosInstance.get('/api/admin/compliance-report');
+      const response = await axiosInstance.get(endpoint);
       const { report = [] } = response.data.data;
 
       const headers = [
@@ -52,15 +52,20 @@ export default function ComplianceReport() {
         ])
       );
 
-      const csv = [buildCsvRow(headers), ...rows].join('\n');
+      const csv = [buildCsvRow(headers), ...rows].join('\r\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       const today = new Date().toISOString().slice(0, 10);
       link.href = url;
-      link.download = `cybershield-compliance-${today}.csv`;
+      link.download = `${filenamePrefix}-${today}.csv`;
+      link.style.display = 'none';
+
+      document.body.appendChild(link);
       link.click();
-      URL.revokeObjectURL(url);
+      link.remove();
+
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (err) {
       setError(getApiErrorMessage(err, 'Failed to download compliance report.'));
     } finally {
