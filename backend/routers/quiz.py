@@ -581,6 +581,79 @@ STATIC_QUESTIONS = {
 }
 
 
+def _quiz_question(number, text, options, correct, explanation, hint):
+    return {
+        "question_number": number,
+        "question_text": text,
+        "options": options,
+        "correct_answer_index": correct,
+        "explanation": explanation,
+        "hint": hint,
+    }
+
+
+# Easier 1-minute fallback bank. These override the original fallback questions
+# so quizzes stay aligned to the short 3-slide lessons when AI generation fails.
+STATIC_QUESTIONS.update({
+    "module_01_phishing": [
+        _quiz_question(1, "A Group SNS email says your mailbox will close today unless you sign in from a link. What should you do first?", ["Use the link and sign in", "Type the official site yourself", "Reply and ask if it is real", "Forward it to your team"], 1, "Suspicious email links should not be trusted. Go to the official site yourself or use a known company portal.", "Do not use the link in the email."),
+        _quiz_question(2, "An email starts with 'Dear Customer' and asks for your account details. Which red flag is easiest to spot?", ["It uses a generic greeting", "It arrived in the morning", "It has a short subject", "It mentions an account"], 0, "A generic greeting is a common phishing clue, especially when the sender should know your name.", "Look at how the message addresses you."),
+        _quiz_question(3, "You hover over a document link and the real address is not the company domain. What is the safest action?", ["Open it in private mode", "Do not click the link", "Click it after work", "Ask a colleague to click"], 1, "A mismatched link can send you to a fake login page or malware. Do not click it.", "The real URL matters more than the button text."),
+        _quiz_question(4, "A colleague sends an unexpected attachment with no context. What should you do before opening it?", ["Open it because you know them", "Verify with them separately", "Save it for later", "Forward it to another colleague"], 1, "Known contacts can be spoofed or compromised. Verify unexpected attachments through another channel first.", "Unexpected attachments need a quick check."),
+        _quiz_question(5, "You spot a phishing email in your inbox. What helps protect the whole company?", ["Delete it only", "Reply to the sender", "Report it to IT", "Ignore it completely"], 2, "Reporting lets IT block similar messages and warn others. Deleting alone does not help the wider team.", "Who needs to know about the threat?"),
+    ],
+    "module_02_passwords": [
+        _quiz_question(1, "Which password habit best protects your Group SNS accounts?", ["Reuse one strong password", "Use unique passwords", "Use your birth year", "Use short easy words"], 1, "Every account needs its own password so one breach does not expose everything.", "Think about what happens after one site is breached."),
+        _quiz_question(2, "Your work password is also used on a shopping site. The shopping site is breached. What is the risk?", ["Only shopping is affected", "Your work login is at risk", "There is no real risk", "Only your phone is at risk"], 1, "Attackers try stolen passwords on other services. Password reuse puts work accounts at risk.", "Attackers reuse stolen credentials too."),
+        _quiz_question(3, "What is the main reason to use a password manager?", ["Store unique strong passwords", "Skip all sign-in steps", "Share passwords faster", "Remove the need for 2FA"], 0, "A password manager helps create and store unique strong passwords for each account.", "It solves the memory problem."),
+        _quiz_question(4, "An attacker knows your password, but your account has 2FA. What else do they usually need?", ["Your second factor", "Your job title", "Your browser name", "Your office location"], 0, "2FA adds a second proof, such as a phone code or authenticator prompt, so a password alone is not enough.", "What does the second factor add?"),
+        _quiz_question(5, "Which password is closest to the lesson's strong-password advice?", ["sales2026", "GroupSNS123", "BlueChairRiver!29", "password!"], 2, "The best choice is longer and mixes words, case, symbols, and numbers.", "Length plus variety wins."),
+    ],
+    "module_03_malware": [
+        _quiz_question(1, "Your files are locked and a message demands payment to restore them. What is this most likely?", ["Ransomware", "A normal update", "Public Wi-Fi", "A password manager"], 0, "Ransomware locks or encrypts files and demands payment.", "The clue is locked files plus payment demand."),
+        _quiz_question(2, "What gives you the safest recovery path after ransomware?", ["Paying quickly", "Regular clean backups", "Restarting the laptop", "Changing the wallpaper"], 1, "Backups let you restore files without trusting criminals or paying a ransom.", "What lets you restore your files?"),
+        _quiz_question(3, "A website offers free cracked office software. What is the safest choice?", ["Download and scan it", "Avoid the download", "Try it on Friday", "Ask a friend to test"], 1, "Untrusted downloads often carry malware. Use official or approved software sources only.", "Free cracked software is a common trap."),
+        _quiz_question(4, "Why should you install security updates promptly?", ["They patch known holes", "They change your password", "They delete all malware", "They make email private"], 0, "Updates often fix security holes that attackers already know how to exploit.", "What do patches fix?"),
+        _quiz_question(5, "A work email has an unexpected attachment and urgent wording. What should you do?", ["Open it quickly", "Do not open it", "Forward it to everyone", "Save it to USB"], 1, "Unexpected email attachments are a major malware path. Pause, verify, and report if suspicious.", "Malware often arrives by email."),
+    ],
+    "module_04_vishing": [
+        _quiz_question(1, "A caller says they are Group SNS IT and asks for your password. What should you do?", ["Give the password", "Refuse and report it", "Give only half", "Ask them to email"], 1, "Legitimate IT staff should not need your password. Refuse and report the call.", "Real IT does not need your password."),
+        _quiz_question(2, "A text says your delivery is delayed and includes a link. What is safest?", ["Tap the link", "Use the official delivery site", "Reply with your address", "Forward it to friends"], 1, "Do not use links from suspicious texts. Check delivery status using an official website or app.", "Use a contact method you choose."),
+        _quiz_question(3, "An unknown caller creates pressure and asks for payment details. What is the golden rule?", ["Never trust, always verify", "Trust if they sound calm", "Pay small amounts first", "Stay on the call"], 0, "Unsolicited calls asking for information or payment should be ended and verified independently.", "Pressure is a warning sign."),
+        _quiz_question(4, "A text message phishing attack is called what?", ["Smishing", "Ransomware", "Baiting", "Shoulder surfing"], 0, "Smishing is phishing through SMS or text messages.", "SMS plus phishing."),
+        _quiz_question(5, "A caller gives you a phone number to verify their request. What should you use instead?", ["Their provided number", "A known official number", "Any number in the message", "The last missed call"], 1, "Attackers can provide fake callback numbers. Use a number from an official source you find yourself.", "Do not use attacker-provided contact details."),
+    ],
+    "module_05_physical_security": [
+        _quiz_question(1, "You leave your desk for coffee. What should you do first?", ["Lock your screen", "Close the browser only", "Turn down brightness", "Leave it open"], 0, "Locking your screen prevents quick unauthorized access while you are away.", "It takes one shortcut."),
+        _quiz_question(2, "You work on a client proposal in an airport. What should you watch for?", ["Shoulder surfing", "Password length", "Email spelling", "Printer settings"], 0, "People nearby may see sensitive information on your screen in public places.", "Who can see your screen?"),
+        _quiz_question(3, "Where should your work laptop be while traveling?", ["With you", "Checked luggage", "Hotel lobby desk", "A cafe table"], 0, "Keep work devices in your possession when traveling. Unattended or checked devices can be stolen.", "Keep control of the device."),
+        _quiz_question(4, "You must use hotel Wi-Fi for work. What should you connect first?", ["Company-approved VPN", "Personal email", "Public file sharing", "Unknown hotspot extender"], 0, "A VPN encrypts your traffic on public Wi-Fi and protects work activity.", "Public Wi-Fi needs protection."),
+        _quiz_question(5, "Why avoid sensitive logins on public Wi-Fi without VPN?", ["Others may intercept data", "It uses more battery", "It slows downloads", "It changes your password"], 0, "Attackers on the same public network may try to intercept traffic.", "Think about the shared network."),
+    ],
+    "module_06_data_handling": [
+        _quiz_question(1, "A trusted colleague asks for a confidential client list. What should you check first?", ["Business need and approval", "Their desk location", "The file size", "Whether they are friendly"], 0, "Sensitive data should only be shared with people who have a legitimate need and proper authorization.", "Trust is not the same as need-to-know."),
+        _quiz_question(2, "Which item is personally identifiable information?", ["Employee home address", "Public press release", "Product brochure", "Office holiday calendar"], 0, "A home address can identify a specific person and must be protected.", "Which one identifies a person?"),
+        _quiz_question(3, "How should printed salary documents be disposed of?", ["Shred them", "Recycle them whole", "Leave them on a desk", "Tear once and bin"], 0, "Sensitive paper records should be shredded so they cannot be read or rebuilt.", "Trash is not enough for sensitive data."),
+        _quiz_question(4, "You clicked a suspicious link at work. What should you do first?", ["Report it immediately", "Wait for symptoms", "Hide the mistake", "Ask social media"], 0, "Fast reporting helps IT limit damage. It is about response, not blame.", "Speed matters in incidents."),
+        _quiz_question(5, "Where should confidential work files be stored?", ["Approved company systems", "Personal cloud drive", "Personal USB stick", "Phone photo gallery"], 0, "Approved systems provide the controls needed for confidential data.", "Keep data inside company controls."),
+    ],
+    "module_07_social_engineering": [
+        _quiz_question(1, "A CEO email asks Finance for an urgent payment outside normal process. What should Finance do?", ["Verify through a known channel", "Pay before end of day", "Reply to the email", "Skip approval because urgent"], 0, "Unusual money requests should be verified through an independent known channel before action.", "Urgency is a manipulation tactic."),
+        _quiz_question(2, "A voice sounds like your manager but asks for a secret approval code. What is safest?", ["Call back using a known number", "Share the code quickly", "Trust the voice", "Ask one casual question"], 0, "AI voice cloning can sound convincing. End the call and verify using a trusted number.", "The voice alone is not proof."),
+        _quiz_question(3, "You find a USB drive in the parking lot. What should you do?", ["Give it to IT", "Plug it in", "Open it at home", "Keep it for later"], 0, "Unknown USB devices can contain malware. Hand them to IT or security without plugging them in.", "Curiosity is what the attacker wants."),
+        _quiz_question(4, "Which clue often appears in social engineering?", ["Urgency to bypass process", "A normal approval step", "A planned meeting", "A public policy link"], 0, "Attackers use urgency, authority, trust, and fear to push people into unsafe action.", "Slow down when pressured."),
+        _quiz_question(5, "Someone invents a believable story to get confidential data. What is that called?", ["Pretexting", "Updating", "Encryption", "Backups"], 0, "Pretexting means using a false story or role to manipulate someone.", "A pretext is a made-up reason."),
+    ],
+    "module_08_financial_scams": [
+        _quiz_question(1, "A supplier emails new bank details for future invoices. What should Accounts Payable do?", ["Call a known supplier number", "Update from the email", "Reply for confirmation", "Wait until payday"], 0, "Payment changes should be verified using existing trusted contact details, not the email request.", "Verify outside the email thread."),
+        _quiz_question(2, "An investment site promises guaranteed 300% crypto returns. What is the safest conclusion?", ["It is a scam warning", "It is low risk", "It is company approved", "It is safe if popular"], 0, "Guaranteed high returns are a major investment scam warning, especially with cryptocurrency.", "Guaranteed returns are the clue."),
+        _quiz_question(3, "An online friend slowly builds trust, then pushes a crypto platform. What should you do?", ["Do not invest", "Send a small test amount", "Borrow to invest more", "Share it with coworkers"], 0, "Relationship-based investment scams build trust before asking for money.", "Trust-building can be part of the scam."),
+        _quiz_question(4, "Why are crypto payments risky in scams?", ["They are hard to recover", "They always double", "Banks reverse them easily", "They require no wallet"], 0, "Cryptocurrency transfers are generally irreversible, so recovery is very difficult.", "What happens after the money is sent?"),
+        _quiz_question(5, "An employee emails HR to change salary bank details. What should HR do first?", ["Verify with the employee directly", "Update immediately", "Reply to the email only", "Forward without checking"], 0, "Payroll changes should be verified with the employee through a known direct channel.", "Payroll changes need direct verification."),
+    ],
+})
+
+
 # --- ENDPOINTS ---
 
 @router.post("/start")
@@ -605,21 +678,55 @@ def start_quiz(
     if module_id not in progress_data.get("modules_unlocked", []):
         raise HTTPException(status_code=403, detail={"error": "MODULE_LOCKED"})
 
-    # Get static questions for this module
-    questions_data = STATIC_QUESTIONS.get(module_id)
-    if not questions_data:
-        raise HTTPException(status_code=404, detail={"error": "MODULE_NOT_FOUND"})
-
-    # Determine attempt number
-    existing_attempts = db.collection("quiz_attempts") \
+    # Determine attempt number and collect recent question wording for variety
+    existing_attempts = list(db.collection("quiz_attempts") \
         .where("uid", "==", user["uid"]) \
         .where("module_id", "==", module_id) \
-        .stream()
-    attempt_number = len(list(existing_attempts)) + 1
+        .stream())
+    attempt_number = len(existing_attempts) + 1
 
-    # Create attempt document
+    previous_questions = []
+    for attempt in existing_attempts[-3:]:
+        attempt_data = attempt.to_dict()
+        for question in attempt_data.get("questions", []):
+            question_text = question.get("question_text")
+            if question_text:
+                previous_questions.append(question_text)
+
+    # Create attempt metadata early so it can seed Groq variation
     attempt_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc)
+
+    # Get module content for Groq
+    module_doc = db.collection("modules").document(module_id).get()
+    if not module_doc.exists:
+        raise HTTPException(status_code=404, detail={"error": "MODULE_NOT_FOUND"})
+
+    module_data = module_doc.to_dict()
+    slides = module_data.get("slides", [])
+
+    # Build module content string
+    content_parts = [f"Module: {module_data.get('title', '')}"]
+    for slide in slides:
+        content_parts.append(f"\n{slide.get('heading', '')}\n{slide.get('body', '')}")
+        for point in slide.get("key_points", []):
+            content_parts.append(f"- {point}")
+    module_content = "\n".join(content_parts)
+
+    # Generate questions via Groq, fall back to static if Groq fails
+    try:
+        from services.quiz_generator import generate_quiz_questions
+        questions_data = generate_quiz_questions(
+            module_id,
+            module_content,
+            attempt_number=attempt_number,
+            variation_seed=attempt_id,
+            previous_questions=previous_questions
+        )
+    except Exception:
+        questions_data = STATIC_QUESTIONS.get(module_id)
+        if not questions_data:
+            raise HTTPException(status_code=500, detail={"error": "GROQ_FAILURE"})
 
     attempt_doc = {
         "attempt_id": attempt_id,
@@ -725,6 +832,7 @@ def submit_quiz(
     badge_unlocked = False
     next_module_unlocked = None
     certificate_eligible = False
+    weak_area_feedback = None
 
     # If passed: update employee_progress
     if passed:
@@ -807,13 +915,25 @@ def submit_quiz(
             "timestamp": now
         })
 
+        # Generate weak area feedback for wrong answers
+        try:
+            from services.feedback_generator import generate_weak_area_feedback
+            wrong_questions = [
+                attempt_data["questions"][i]
+                for i, r in enumerate(results)
+                if not r["correct"]
+            ]
+            weak_area_feedback = generate_weak_area_feedback(wrong_questions)
+        except Exception:
+            weak_area_feedback = None
+
     # Update attempt document
     attempt_ref.update({
         "submitted_at": now,
         "answers_submitted": submitted_answers,
         "score": score,
         "passed": passed,
-        "weak_area_feedback": None,  # Chunk 4 will fill this via Groq
+        "weak_area_feedback": weak_area_feedback,
         "status": "submitted"
     })
 
@@ -828,7 +948,7 @@ def submit_quiz(
             "correct_count": correct_count,
             "total_questions": total_questions,
             "results": results,
-            "weak_area_feedback": None,
+            "weak_area_feedback": weak_area_feedback,
             "badge_unlocked": badge_unlocked,
             "next_module_unlocked": next_module_unlocked,
             "certificate_eligible": certificate_eligible

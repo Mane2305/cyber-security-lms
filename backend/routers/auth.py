@@ -4,9 +4,10 @@ from datetime import datetime, timezone
 import secrets
 import string
 from firebase_admin import auth as firebase_auth
-from models.user import LoginRequest, CreateUserRequest, DeactivateUserRequest, UserResponse
+from models.user import LoginRequest, CreateUserRequest, DeactivateUserRequest, ChangePasswordRequest, UserResponse
 from services.auth_service import verify_token, get_user_from_firestore
 from services.firebase_service import db
+from services.team_service import assign_employee_to_manager
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 security = HTTPBearer()
@@ -128,6 +129,9 @@ def create_user(request: CreateUserRequest, admin_user: dict = Depends(get_curre
     })
     
     batch.commit()
+
+    if request.manager_uid and request.role == "employee":
+        assign_employee_to_manager(uid, request.manager_uid)
     
     response_data = UserResponse(**user_data).model_dump()
     response_data["temporary_password"] = temporary_password
@@ -173,3 +177,28 @@ def deactivate_user(request: DeactivateUserRequest, admin_user: dict = Depends(g
     batch.commit()
     
     return {"success": True, "data": {"uid": uid, "deactivated": True}}
+
+@router.post("/change-password")
+def change_password(request: ChangePasswordRequest, authorization: str = Header(...)):
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail={"error": "AUTH_TOKEN_MISSING"})
+    token = authorization.replace("Bearer ", "")
+    decoded = verify_token(token)
+    uid = decoded.get("uid")
+    get_user_from_firestore(uid)
+
+    if len(request.new_password) < 8:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "VALIDATION_ERROR", "message": "Password must be at least 8 characters"}
+        )
+
+    try:
+        firebase_auth.update_user(uid, password=request.new_password)
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "FIREBASE_UPDATE_FAILED", "message": str(e)}
+        )
+
+    return {"success": True, "data": {"changed": True}}

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import QuestionCard from '../components/QuestionCard';
 import ScoreScreen from '../components/ScoreScreen';
@@ -6,6 +7,7 @@ import axiosInstance from '../utils/axiosInstance';
 
 const TOTAL_QUESTIONS = 5;
 const INITIAL_ANSWERS = [null, null, null, null, null];
+const QUESTION_TIME = 60;
 
 function getQuizErrorMessage(err) {
   const detail = err?.response?.data?.detail;
@@ -13,6 +15,18 @@ function getQuizErrorMessage(err) {
   if (detail?.message) return detail.message;
   return 'Something went wrong. Please try again.';
 }
+
+function getTimerColor(seconds) {
+  if (seconds > 15) return 'text-green-600 dark:text-green-400';
+  if (seconds >= 10) return 'text-amber-600 dark:text-amber-400';
+  return 'text-red-600 dark:text-red-400';
+}
+
+const btnSecondary =
+  'rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700';
+
+const btnPrimary =
+  'rounded-lg bg-cyan-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-40';
 
 export default function QuizPage() {
   const { module_id } = useParams();
@@ -25,6 +39,7 @@ export default function QuizPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(QUESTION_TIME);
 
   const startQuiz = useCallback(async () => {
     try {
@@ -35,6 +50,7 @@ export default function QuizPage() {
       setCurrentQuestionIndex(0);
       setSelectedAnswers([...INITIAL_ANSWERS]);
       setSubmittedResults(null);
+      setTimeLeft(QUESTION_TIME);
     } catch (err) {
       setError(getQuizErrorMessage(err));
       setQuizData(null);
@@ -46,6 +62,29 @@ export default function QuizPage() {
   useEffect(() => {
     startQuiz();
   }, [startQuiz]);
+
+  useEffect(() => {
+    if (!quizData || submittedResults) return undefined;
+    setTimeLeft(QUESTION_TIME);
+  }, [currentQuestionIndex, quizData, submittedResults]);
+
+  useEffect(() => {
+    if (!quizData || submittedResults || loading) return undefined;
+
+    const timer = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          if (currentQuestionIndex < TOTAL_QUESTIONS - 1) {
+            setCurrentQuestionIndex((i) => i + 1);
+          }
+          return QUESTION_TIME;
+        }
+        return t - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [quizData, submittedResults, loading, currentQuestionIndex]);
 
   const handleSelect = (optionIndex) => {
     setSelectedAnswers((prev) => {
@@ -92,130 +131,112 @@ export default function QuizPage() {
     startQuiz();
   };
 
-  const handleGoToDashboard = () => {
-    navigate('/dashboard/employee');
-  };
-
   const currentQuestion = quizData?.questions?.[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === TOTAL_QUESTIONS - 1;
-  const currentSelected = selectedAnswers[currentQuestionIndex];
-  const canProceed = currentSelected !== null;
+  const canProceed = selectedAnswers[currentQuestionIndex] !== null;
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white px-4 py-4 shadow-sm sm:px-8">
-        <div className="mx-auto flex max-w-3xl items-center">
-          <button
-            type="button"
-            onClick={() => navigate('/dashboard/employee')}
-            className="flex items-center gap-1 text-sm font-medium text-slate-600 transition hover:text-slate-900"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-            </svg>
-            Back to Dashboard
+    <div>
+      {loading && (
+        <div className="flex justify-center py-20">
+          <div
+            className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-cyan-600 dark:border-slate-700 dark:border-t-cyan-400"
+            role="status"
+            aria-label="Loading quiz"
+          />
+        </div>
+      )}
+
+      {!loading && error && !quizData && !submittedResults && (
+        <div className="text-center">
+          <div className="alert-error mx-auto max-w-md" role="alert">
+            {error}
+          </div>
+          <button type="button" onClick={() => navigate('/dashboard/employee')} className={`mt-5 ${btnSecondary}`}>
+            Back to dashboard
           </button>
         </div>
-      </header>
+      )}
 
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-8">
-        {loading && (
-          <div className="flex justify-center py-24">
-            <div
-              className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600"
-              role="status"
-              aria-label="Loading quiz"
-            />
-          </div>
-        )}
+      {!loading && submittedResults && (
+        <ScoreScreen
+          results={submittedResults}
+          onRetry={handleRetry}
+          onGoToDashboard={() => navigate('/dashboard/employee')}
+        />
+      )}
 
-        {!loading && error && !quizData && !submittedResults && (
-          <div className="text-center">
-            <div
-              className="mx-auto max-w-md rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-              role="alert"
-            >
-              {error}
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate('/dashboard/employee')}
-              className="mt-6 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-white"
-            >
-              Back to Dashboard
-            </button>
-          </div>
-        )}
-
-        {!loading && submittedResults && (
-          <ScoreScreen
-            results={submittedResults}
-            onRetry={handleRetry}
-            onGoToDashboard={handleGoToDashboard}
-          />
-        )}
-
-        {!loading && quizData && !submittedResults && (
-          <>
-            <div className="mb-6 text-center">
-              <p className="text-sm font-medium text-slate-600">
+      {!loading && quizData && !submittedResults && (
+        <>
+          <div className="panel mb-5 flex items-center justify-between gap-4 px-4 py-3">
+            <div>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
                 Question {currentQuestionIndex + 1} of {TOTAL_QUESTIONS}
               </p>
-              <div className="mt-3 flex justify-center gap-2">
+              <div className="mt-2 flex gap-1.5">
                 {selectedAnswers.map((answer, index) => (
                   <span
                     key={index}
-                    className={`h-3 w-3 rounded-full ${
-                      answer !== null ? 'bg-blue-600' : 'border-2 border-slate-300 bg-white'
+                    className={`h-2 w-8 rounded-full transition ${
+                      index === currentQuestionIndex
+                        ? 'bg-cyan-500'
+                        : answer !== null
+                          ? 'bg-cyan-300 dark:bg-cyan-600'
+                          : 'bg-slate-200 dark:bg-slate-600'
                     }`}
-                    aria-label={`Question ${index + 1}${answer !== null ? ' answered' : ' unanswered'}`}
+                    aria-label={`Question ${index + 1}`}
                   />
                 ))}
               </div>
             </div>
-
-            {currentQuestion && (
-              <QuestionCard
-                question={currentQuestion}
-                selectedOption={currentSelected}
-                onSelect={handleSelect}
-                disabled={false}
-              />
-            )}
-
-            {error && (
-              <div
-                className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-                role="alert"
-              >
-                {error}
-              </div>
-            )}
-
-            <div className="mt-8 flex justify-end">
-              {isLastQuestion ? (
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={!canProceed || submitting}
-                  className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {submitting ? 'Submitting…' : 'Submit Quiz'}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  disabled={!canProceed}
-                  className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Next
-                </button>
-              )}
+            <div className={`text-xl font-bold tabular-nums ${getTimerColor(timeLeft)}`}>
+              {timeLeft}s
             </div>
-          </>
-        )}
-      </main>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {currentQuestion && (
+              <motion.div
+                key={currentQuestionIndex}
+                initial={{ opacity: 0, x: 40 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -40 }}
+                transition={{ duration: 0.25 }}
+              >
+                <QuestionCard
+                  question={currentQuestion}
+                  selectedOption={selectedAnswers[currentQuestionIndex]}
+                  onSelect={handleSelect}
+                  disabled={false}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {error && (
+            <div className="alert-error mt-4" role="alert">
+              {error}
+            </div>
+          )}
+
+          <div className="mt-6 flex justify-end">
+            {isLastQuestion ? (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={!canProceed || submitting}
+                className={btnPrimary}
+              >
+                {submitting ? 'Submitting…' : 'Submit quiz'}
+              </button>
+            ) : (
+              <button type="button" onClick={handleNext} disabled={!canProceed} className={btnPrimary}>
+                Next
+              </button>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

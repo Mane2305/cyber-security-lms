@@ -56,109 +56,88 @@ What Chunk 2 Needs:
 ---
 
 ## CHUNK 2 — MODULE VIEWER
-Status: NOT STARTED
 
-Goal: Employee can see all 8 module cards with lock/unlock status and read lesson slides.
+Status: COMPLETE
+Files Created:
 
-### Agent Assignments:
-- Antigravity: backend/routers/modules.py (new file), GET /api/modules, GET /api/modules/{module_id}
-- Cursor: frontend/src/pages/EmployeeDashboard.jsx (basic version, just module list), frontend/src/pages/ModuleViewer.jsx, frontend/src/components/ModuleCard.jsx, frontend/src/components/LessonSlide.jsx, frontend/src/components/ProgressBar.jsx
-- ChatGPT: frontend/src/data/modules.js (format all 8 modules from docx into structure defined in DATABASE_SCHEMA.md)
+backend/models/module.py
+backend/routers/modules.py
+frontend/src/pages/EmployeeDashboard.jsx (replaced placeholder)
+frontend/src/pages/ModuleViewer.jsx
+frontend/src/components/ModuleCard.jsx
+frontend/src/components/LessonSlide.jsx
+frontend/src/components/ProgressBar.jsx
 
-### What to build:
+Key Decisions Made:
 
-Backend (Antigravity):
-- GET /api/modules: return all 8 modules with status (locked/unlocked/completed) for the requesting employee
-- GET /api/modules/{module_id}: return full module with slides if employee has it unlocked
-- Read employee_progress document to determine unlock status
-- Return MODULE_LOCKED error if employee requests a locked module
+8 modules total (module_08_financial_scams added to original 7)
+seed_data() in main.py deletes and recreates all module documents on every startup
+Modules seeded with slides: [] initially — slides populated in Chunk 3
+Take Quiz button in ModuleViewer navigates to /quiz/:module_id
+Module IDs use underscore format: module_01_phishing etc
+Tested with admin UID only — no employee user existed yet at time of testing
 
-Frontend (Cursor):
-- EmployeeDashboard.jsx: grid of 8 ModuleCard components, shows progress bar at top
-- ModuleCard.jsx: shows module title, description, lock/unlock icon, completion badge if done, click navigates to /module/{module_id}
-- ModuleViewer.jsx: fetches module content, displays slides one at a time, prev/next navigation, shows slide counter (1 of 3), Start Quiz button at end of last slide
-- LessonSlide.jsx: renders single slide with heading, body, key points
-- ProgressBar.jsx: shows X of 8 modules completed as a visual bar
+Firestore Collections Touched:
 
-### Test criteria before marking COMPLETE:
-- Employee sees 8 module cards, only first one unlocked initially
-- Locked modules show lock icon and are not clickable
-- Clicking unlocked module shows lesson slides
-- Can navigate forward and backward through slides
-- Last slide shows Start Quiz button
-- Completed modules show completion checkmark on card
-- Progress bar reflects accurate completion count
+modules (seeded 8 documents)
+employee_progress (read only, admin uid used for testing)
+activity_log (module_started written on GET /api/modules/{module_id})
 
-### Files Created:
-(fill in after completion)
+What Chunk 3 Needs From This:
 
-### Key Decisions Made:
-(fill in after completion)
-
-### Firestore Collections Touched:
-(fill in after completion)
-
-### What Chunk 3 Needs From This:
-- How ModuleViewer navigates to quiz (what route, what params)
-- module_id format used in routes
-- How modules.js static data is structured (for fallback)
-
+Take Quiz navigates to /quiz/:module_id
+axiosInstance in utils/axiosInstance.js handles auth automatically
+currentUser from useAuth() has shape: { uid, email, name, role, token }
+ProtectedRoute accepts allowedRoles prop as array of strings
+All API responses shape: { success: true, data: {...} } — always read response.data.data
 ---
 
 ## CHUNK 3 — QUIZ ENGINE (STATIC)
-Status: NOT STARTED
+Status: COMPLETE
+Files Created:
 
-Goal: Employee can take a quiz with hardcoded static questions. Score calculated in backend. Pass/fail logic. Retry flow. Results saved to Firestore.
+backend/models/quiz.py (replaced skeleton)
+backend/services/completion_checker.py (replaced skeleton)
+backend/routers/quiz.py (replaced skeleton)
+frontend/src/pages/QuizPage.jsx
+frontend/src/components/QuestionCard.jsx
+frontend/src/components/ScoreScreen.jsx
+frontend/src/components/RetryPrompt.jsx
+frontend/src/data/modules.js (populated with full slide content by ChatGPT)
+frontend/src/App.jsx (updated, added /quiz/:module_id route)
 
-Note: Static questions are temporary. Chunk 4 replaces them with Groq-generated questions. Build the full quiz flow now with static questions so Chunk 4 only needs to swap the question source.
+Key Decisions Made:
 
-### Agent Assignments:
-- Antigravity: backend/routers/quiz.py, backend/models/quiz.py, backend/services/completion_checker.py (basic version)
-- Cursor: frontend/src/pages/QuizPage.jsx, frontend/src/components/QuestionCard.jsx, frontend/src/components/ScoreScreen.jsx, frontend/src/components/RetryPrompt.jsx
+Static questions hardcoded in quiz.py STATIC_QUESTIONS dict, 5 questions per module, all 8 modules covered
+correct_answer_index stored in Firestore only, never sent to frontend
+Pass threshold is 70% (4 out of 5 correct)
+Retry flow: QuizPage resets all state and calls POST /api/quiz/start again for fresh attempt
+attempt_number increments by counting existing attempts in quiz_attempts collection
+weak_area_feedback is null in all responses — Chunk 4 fills this via Groq
+RetryPrompt is not a separate page — it is rendered inside ScoreScreen when passed is false
+Test employee seeded by seed_data() on startup: employee@groupsns.com / TestEmployee@123
+Seed also populates real slide content into all 8 module documents in Firestore
 
-### What to build:
+Firestore Collections Touched:
 
-Backend (Antigravity):
-- POST /api/quiz/start: create quiz_attempt document in Firestore with 5 hardcoded questions for that module (different set per module, minimum). Return attempt_id and questions WITHOUT correct_answer_index. Store correct_answer_index in Firestore document only.
-- POST /api/quiz/submit: receive attempt_id and answers array. Fetch stored questions from Firestore. Score answers. Calculate percentage. Determine pass or fail using tenant settings pass_threshold (70). If passed: update employee_progress (add module to completed, unlock next module, add badge). Write to activity_log. Return full result per API_CONTRACTS.md.
-- completion_checker.py: check_module_completion(uid, tenant_id) function that returns count of completed modules
+quiz_attempts (created on start, updated on submit)
+employee_progress (updated on pass: modules_completed, modules_unlocked, badges_earned, last_module_completed_at)
+activity_log (quiz_started, quiz_passed, quiz_failed, module_completed, badge_earned)
+modules (slide content seeded)
+users (test employee document created)
 
-Frontend (Cursor):
-- QuizPage.jsx: fetches quiz via POST /api/quiz/start on mount. Shows one question at a time. Employee selects option. Next button advances. Submit on last question calls POST /api/quiz/submit. Shows loading state while scoring.
-- QuestionCard.jsx: renders question text, 4 option buttons, highlights selected option
-- ScoreScreen.jsx: shows score percentage, pass or fail message, which answers were right or wrong with explanations, badge earned notification if passed, next module unlocked notification if passed
-- RetryPrompt.jsx: shown if failed. Shows score, weak area feedback placeholder (will be filled by Chunk 4), Try Again button that calls POST /api/quiz/start again
+What Chunk 4 Needs From This:
 
-### Test criteria before marking COMPLETE:
-- Employee can start a quiz and see 5 questions
-- Selecting an option highlights it
-- Cannot proceed without selecting an option
-- Submit sends answers and receives score
-- Score screen shows correct and incorrect answers
-- Passing (4 or 5 correct) shows badge earned and next module unlocked
-- Failing (3 or less correct) shows retry prompt
-- Retry starts a new attempt (attempt_number increments)
-- quiz_attempts collection in Firestore has correct document after submission
-- employee_progress updates correctly on pass
-
-### Files Created:
-(fill in after completion)
-
-### Key Decisions Made:
-(fill in after completion)
-
-### Firestore Collections Touched:
-(fill in after completion)
-
-### What Chunk 4 Needs From This:
-- Exact shape of questions array returned by /api/quiz/start (Chunk 4 only changes how these are generated)
-- Where weak_area_feedback is displayed in RetryPrompt.jsx (Chunk 4 fills this in)
-- Groq service needs to know the static question format to match output format exactly
+questions array shape returned by /api/quiz/start: { question_number, question_text, options, hint }
+weak_area_feedback field exists in quiz_attempts Firestore document and in submit response — currently null, Chunk 4 replaces with Groq output
+WeakAreaFeedback displayed in ScoreScreen inside amber box titled "Areas to Review" when not null
+LearningAssistant placeholder exists in ModuleViewer as "Ask AI - Coming Soon" button — Chunk 4 replaces it with real LearningAssistant.jsx component
+Groq quiz generator must output exactly 5 questions matching the static question format: question_number, question_text, options (4 strings), correct_answer_index (0-3), explanation, hint
 
 ---
 
 ## CHUNK 4 — GROQ AI INTEGRATION
-Status: NOT STARTED
+Status: COMPLETE
 
 Goal: Replace static quiz questions with Groq-generated questions. Add learning assistant widget. Add weak area feedback after failed quiz.
 
@@ -198,10 +177,24 @@ Frontend (Cursor):
 - Groq failure returns appropriate error, not crash
 
 ### Files Created:
-(fill in after completion)
+- backend/services/groq_service.py
+- backend/services/quiz_generator.py
+- backend/services/feedback_generator.py
+- backend/services/assistant.py
+- backend/routers/ai.py
+- frontend/src/components/LearningAssistant.jsx
+- frontend/src/pages/ModuleViewer.jsx (updated to mount LearningAssistant)
+- backend/routers/quiz.py (updated to use Groq questions and weak area feedback)
+- backend/main.py (registered AI router)
 
 ### Key Decisions Made:
-(fill in after completion)
+- Groq model updated to llama-3.3-70b-versatile because llama3-70b-8192 is decommissioned
+- backend/services/groq_service.py loads backend/.env directly so GROQ_API_KEY works from repo root or backend cwd
+- Quiz generation keeps static question fallback if Groq fails
+- Quiz generator now uses Group SNS-specific workplace scenarios, attempt_id variation seed, attempt_number, and recent prior questions to improve variety
+- AI assistant answers are scoped to the current module content
+- Weak area feedback is generated only on failed quizzes; passed quizzes keep weak_area_feedback as null
+- LearningAssistant keeps local conversation history and calls POST /api/ai/ask
 
 ### What Chunk 5 Needs From This:
 - Confirmation that employee_progress.modules_completed updates correctly on pass
@@ -210,9 +203,9 @@ Frontend (Cursor):
 ---
 
 ## CHUNK 5 — BADGES AND CERTIFICATE
-Status: NOT STARTED
+Status: COMPLETE
 
-Goal: Badge displays correctly after module pass. Certificate generates as downloadable PDF after all 7 modules passed. Fraud detection runs before certificate generation.
+Goal: Badge displays correctly after module pass. Certificate generates after all 8 modules passed. Fraud detection runs before certificate generation.
 
 ### Agent Assignments:
 - Antigravity: backend/routers/rewards.py, backend/services/badge_service.py, backend/services/fraud_detector.py, backend/services/completion_checker.py (update)
@@ -221,47 +214,72 @@ Goal: Badge displays correctly after module pass. Certificate generates as downl
 ### What to build:
 
 Backend (Antigravity):
-- GET /api/rewards/badges: return all 7 badges with earned status for employee per API_CONTRACTS.md
-- GET /api/rewards/certificate/check: check if all 7 modules in employee_progress.modules_completed, calculate total_completion_minutes from first_module_started_at to last_module_completed_at, run fraud detector, return eligibility and fraud flag
+- GET /api/rewards/badges: return all 8 badges with earned status for employee per API_CONTRACTS.md
+- GET /api/rewards/certificate/check: check if all 8 modules in employee_progress.modules_completed, calculate total_completion_minutes from first_module_started_at to last_module_completed_at, return eligibility and fraud flag
 - POST /api/rewards/certificate/generate: if eligible, create certificates collection document, update employee_progress certificate fields, write activity_log entry, return certificate data
-- fraud_detector.py: detect_suspicious_completion(first_started_at, last_completed_at, fraud_threshold_minutes) function. Returns boolean. Compares total minutes against tenant settings fraud_detection_minutes (default 20).
-- badge_service.py: get_badges_for_employee(uid, tenant_id) function that joins module data with employee_progress badges_earned array
+- fraud_detector.py: check_fraud(uid, tenant_id) function. Returns boolean. Compares total minutes against tenant settings fraud_detection_minutes (default 20).
+- badge_service.py: get_all_badges_for_employee(uid, tenant_id) function that joins module data with employee_progress badges_earned array
 
 Frontend (Cursor):
-- BadgesPage.jsx: grid of 7 BadgeCard components. Earned badges shown in full color. Unearned badges shown greyed out with lock icon.
+- BadgesPage.jsx: grid of 8 BadgeCard components. Earned badges shown in full color. Unearned badges shown greyed out with lock icon.
 - BadgeCard.jsx: shows badge icon (use emoji or simple SVG), badge name, earned date if earned, module name
 - CertificatePage.jsx: fetches certificate check on mount. If not eligible shows progress message. If eligible shows Generate Certificate button. On click calls POST /api/rewards/certificate/generate, then renders CertificateTemplate with returned data, shows Download as PDF button.
-- CertificateTemplate.jsx: professional looking certificate layout with employee name, tenant name, completion date, all 7 module names, certificate ID. This is what html2canvas captures.
+- CertificateTemplate.jsx: professional looking certificate layout with employee name, tenant name, completion date, all 8 module names, certificate ID. This is what html2canvas captures.
 - certificateGenerator.js: uses html2canvas to capture CertificateTemplate div as canvas, converts to PNG or PDF, triggers browser download
 
 ### Test criteria before marking COMPLETE:
 - Earned badges show correctly after passing modules
 - Unearned badges show as locked
 - Certificate page shows not eligible message if modules incomplete
-- Certificate generates correctly after all 7 passed
+- Certificate generates correctly after all 8 passed
 - Certificate PDF downloads successfully
 - Certificate has correct employee name, date, all module names
 - Fraud flag set correctly if completed in under 20 minutes (test by manually setting timestamps in Firestore)
 - Admin can see fraud flags (verify in Firestore, dashboard in Chunk 6)
 
 ### Files Created:
-(fill in after completion)
+- backend/services/badge_service.py
+- backend/services/fraud_detector.py
+- backend/services/completion_checker.py (updated with get_completion_time_minutes)
+- backend/routers/rewards.py
+- backend/main.py (registered rewards router)
+- frontend/src/pages/BadgesPage.jsx
+- frontend/src/pages/CertificatePage.jsx
+- frontend/src/components/BadgeCard.jsx
+- frontend/src/components/CertificateTemplate.jsx
+- frontend/src/utils/certificateGenerator.js
 
 ### Key Decisions Made:
-(fill in after completion)
+- GET /api/rewards/badges returns 8 badge objects with module_id, module_title, badge_name, badge_description, earned, earned_at
+- Certificate eligibility requires exactly 8 completed modules
+- POST /api/rewards/certificate/generate is idempotent: if certificate_issued is true and certificate exists, it returns existing certificate data
+- Fraud detection runs during certificate generation, not quiz submission
+- Fraud threshold comes from tenants/{tenant_id}.settings.fraud_detection_minutes with default 20
+- Certificate document ID format is cert_{uid}_{unix_timestamp}
+- Certificate fields follow DATABASE_SCHEMA.md: certificate_id, uid, tenant_id, employee_name, employee_email, tenant_name, issued_at, valid_until, modules_completed, fraud_flagged, total_completion_minutes
+- Activity log writes certificate_generated and, when applicable, fraud_flag_raised
+- Badges page displays earned and locked badges from /api/rewards/badges
+- Certificate page checks eligibility, generates certificate data, renders certificate preview, and downloads certificate as PNG
+- Certificate download now renders directly to canvas from certificate data instead of relying on DOM capture, avoiding silent html2canvas download failures
 
 ### Firestore Collections Touched:
-(fill in after completion)
+- modules (read for badge metadata)
+- employee_progress (read for badges/check, updated for certificate_issued, certificate_id, certificate_issued_at, fraud_flagged, total_completion_minutes, updated_at)
+- tenants (read for tenant name, certificate_validity_days, fraud_detection_minutes)
+- users (read employee name and email)
+- certificates (created/read)
+- activity_log (certificate_generated, fraud_flag_raised)
 
 ### What Chunk 6 Needs From This:
-- Exact fields in employee_progress that dashboards will read
-- certificates collection structure for admin compliance report
-- fraud_flagged field location in both employee_progress and certificates
+- Dashboards can read employee_progress.modules_completed, badges_earned, certificate_issued, certificate_id, certificate_issued_at, fraud_flagged, total_completion_minutes, last_module_completed_at, updated_at
+- certificates collection fields for admin compliance report: certificate_id, uid, tenant_id, employee_name, employee_email, tenant_name, issued_at, valid_until, modules_completed, fraud_flagged, total_completion_minutes
+- fraud_flagged exists in both employee_progress and certificates
+- Rewards endpoints are registered under /api/rewards
 
 ---
 
 ## CHUNK 6 — ROLE DASHBOARDS
-Status: NOT STARTED
+Status: COMPLETE
 
 Goal: Three distinct dashboard views fully working. Employee sees own progress. Manager sees team. Admin sees everything plus user management.
 
@@ -297,15 +315,56 @@ Frontend (Cursor):
 - Fraud flags visible in admin dashboard
 
 ### Files Created:
-(fill in after completion)
+- backend/services/achievement_service.py
+- backend/services/risk_calculator.py
+- backend/services/team_service.py
+- backend/routers/dashboard.py
+- backend/routers/admin.py
+- backend/routers/manager.py
+- backend/routers/notifications.py
+- backend/main.py (registered dashboard, admin, manager, notifications routers)
+- frontend/src/pages/EmployeeDashboard.jsx (full dashboard version)
+- frontend/src/pages/ManagerDashboard.jsx
+- frontend/src/pages/AdminDashboard.jsx
+- frontend/src/pages/SettingsPage.jsx
+- frontend/src/components/AppLayout.jsx
+- frontend/src/components/Sidebar.jsx
+- frontend/src/components/AnalyticsCard.jsx
+- frontend/src/components/TeamProgressTable.jsx
+- frontend/src/components/UserManagement.jsx
+- frontend/src/components/ComplianceReport.jsx
+- frontend/src/components/NotificationBell.jsx
+- frontend/src/components/RiskScoreBadge.jsx
+- frontend/src/components/AccountSettings.jsx
+- frontend/src/components/ThemeToggle.jsx
+- frontend/src/components/skeletons/DashboardSkeleton.jsx
+- frontend/src/components/skeletons/ModuleSkeleton.jsx
+- frontend/src/components/skeletons/TableSkeleton.jsx
+- frontend/src/hooks/useDashboardView.js
+- frontend/src/context/ThemeContext.jsx
+- frontend/src/utils/formatters.js
+- frontend/src/App.jsx (updated dashboard/settings/badges/certificate routes)
+- frontend/src/main.jsx (ThemeProvider added)
 
 ### Key Decisions Made:
-(fill in after completion)
+- Dashboards use role-specific API endpoints under /api/dashboard
+- Employee dashboard shows progress, unlocked modules, recent activity, certificate status, badges, achievements, risk score, and notifications
+- Manager dashboard shows team metrics, member progress table, fraud/high-risk visibility, compliance export, reset quiz flow, and notification handling
+- Admin dashboard shows organization metrics, module completion rates, fraud flags, user management, compliance reporting, and risk indicators
+- User management supports creating users and deactivating users through admin endpoints
+- Compliance report downloads as CSV from frontend using returned report data
+- AppLayout and Sidebar provide shared authenticated navigation across protected pages
+- ThemeContext powers light/dark theme preference across the frontend
+- Notifications are exposed through /api/notifications and shown in the shared layout
+- Manager-specific reset quiz endpoint is implemented under /api/manager/reset-quiz
+- Frontend build was verified successfully with npm.cmd run build
 
 ### What Chunk 7 Needs From This:
-- List of any hardcoded values that need environment variable replacement
-- Any known integration gaps between chunks
-- List of pages and their routes
+- Hardcoded values to review for deployment: API base URL/env handling, CORS origins, tenant_id "group-sns", seeded demo users, fraud threshold defaults, certificate validity defaults
+- Known integration gap: docs/API_CONTRACTS.md and docs/ARCHITECTURE.md still reference 7 modules in places, but the app now uses 8 modules
+- Known integration gap: html2canvas remains listed in frontend dependencies though certificate download now uses direct canvas rendering
+- Protected routes include /dashboard/employee, /dashboard/manager, /dashboard/admin, /module/:module_id, /quiz/:module_id, /badges, /certificate, and /settings
+- Backend routers now include auth, modules, quiz, ai, rewards, dashboard, admin, manager, and notifications
 
 ---
 
@@ -378,12 +437,12 @@ GitHub Repo: https://github.com/Mane2305/cyber-security-lms
 
 ## CHUNK STATUS SUMMARY
 
-Chunk 1 - Auth System: NOT STARTED
-Chunk 2 - Module Viewer: NOT STARTED
-Chunk 3 - Quiz Engine Static: NOT STARTED
-Chunk 4 - Groq AI Integration: NOT STARTED
-Chunk 5 - Badges and Certificate: NOT STARTED
-Chunk 6 - Role Dashboards: NOT STARTED
+Chunk 1 - Auth System: COMPLETE
+Chunk 2 - Module Viewer: COMPLETE
+Chunk 3 - Quiz Engine Static: COMPLETE
+Chunk 4 - Groq AI Integration: COMPLETE
+Chunk 5 - Badges and Certificate: COMPLETE
+Chunk 6 - Role Dashboards: COMPLETE
 Chunk 7 - Glue and Deploy: NOT STARTED
 
 ---

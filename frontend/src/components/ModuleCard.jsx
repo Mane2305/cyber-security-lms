@@ -1,57 +1,56 @@
+import { motion } from 'framer-motion';
+import {
+  Bug,
+  Building2,
+  Check,
+  Database,
+  DollarSign,
+  KeyRound,
+  Lock,
+  Mail,
+  Phone,
+  Users,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-function LockIcon({ className }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-    </svg>
-  );
-}
-
-function CheckIcon({ className }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-    </svg>
-  );
-}
-
-function BadgeIcon({ className }) {
-  return (
-    <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 2l2.4 4.8 5.4.8-3.9 3.8.9 5.4L12 14.8 7.2 17.8l.9-5.4L4.2 7.6l5.4-.8L12 2z" />
-    </svg>
-  );
-}
+const MODULE_ICONS = {
+  module_01_phishing: Mail,
+  module_02_passwords: KeyRound,
+  module_03_malware: Bug,
+  module_04_vishing: Phone,
+  module_05_physical_security: Building2,
+  module_06_data_handling: Database,
+  module_07_social_engineering: Users,
+  module_08_financial_scams: DollarSign,
+};
 
 const statusStyles = {
   locked: {
-    card: 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-500',
-    badge: 'bg-slate-300 text-slate-600',
+    card: 'cursor-not-allowed border-l-slate-400 opacity-75 dark:border-l-slate-600',
+    badge: 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400',
     badgeLabel: 'Locked',
   },
   unlocked: {
-    card: 'cursor-pointer border-blue-200 bg-blue-50 text-slate-900 hover:border-blue-400 hover:shadow-md',
-    badge: null,
-    badgeLabel: null,
+    card: 'cursor-pointer border-l-cyan-500 hover:shadow-md',
+    badge: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-400',
+    badgeLabel: 'Unlocked',
   },
   completed: {
-    card: 'cursor-pointer border-green-200 bg-green-50 text-slate-900 hover:border-green-400 hover:shadow-md',
-    badge: 'bg-green-500 text-white',
+    card: 'cursor-pointer border-l-green-500 hover:shadow-md',
+    badge: 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400',
     badgeLabel: 'Completed',
   },
 };
 
 export default function ModuleCard({ module }) {
   const navigate = useNavigate();
-  const { id, title, description, status, badge_earned, order } = module;
+  const { id, title, description, status, order } = module;
   const styles = statusStyles[status] || statusStyles.locked;
   const isClickable = status === 'unlocked' || status === 'completed';
+  const TopicIcon = MODULE_ICONS[id] || Mail;
 
   const handleClick = () => {
-    if (isClickable) {
-      navigate(`/module/${id}`);
-    }
+    if (isClickable) navigate(`/module/${id}`);
   };
 
   const handleKeyDown = (e) => {
@@ -62,33 +61,38 @@ export default function ModuleCard({ module }) {
   };
 
   return (
-    <div
+    <motion.div
       role={isClickable ? 'button' : undefined}
       tabIndex={isClickable ? 0 : undefined}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
-      className={`relative flex flex-col rounded-xl border p-5 shadow-sm transition ${styles.card}`}
+      whileHover={isClickable ? { y: -4, transition: { duration: 0.2 } } : undefined}
+      className={`panel relative flex h-full w-full min-h-[220px] flex-col border-l-4 p-5 transition-shadow ${styles.card}`}
     >
-      {badge_earned && (
-        <BadgeIcon className="absolute right-3 top-3 h-5 w-5 text-amber-500" title="Badge earned" />
-      )}
+      <span className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+        {order}
+      </span>
 
-      {styles.badge && (
-        <span className={`absolute left-3 top-3 rounded-full px-2 py-0.5 text-xs font-medium ${styles.badge}`}>
-          {styles.badgeLabel}
+      <div className="mb-3 flex h-10 shrink-0 items-center gap-2">
+        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-cyan-600 dark:bg-slate-700/80 dark:text-cyan-400">
+          <TopicIcon className="h-5 w-5" />
         </span>
-      )}
-
-      <div className="mb-3 mt-6 flex items-center gap-2">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/80 text-sm font-bold">
-          {order}
-        </span>
-        {status === 'locked' && <LockIcon className="h-5 w-5 text-slate-400" />}
-        {status === 'completed' && <CheckIcon className="h-5 w-5 text-green-600" />}
+        {status === 'locked' && <Lock className="h-4 w-4 text-slate-500" />}
+        {status === 'completed' && <Check className="h-4 w-4 text-green-600 dark:text-green-400" />}
       </div>
 
-      <h3 className="text-base font-semibold leading-snug">{title}</h3>
-      <p className="mt-2 flex-1 text-sm leading-relaxed opacity-80">{description}</p>
-    </div>
+      <h3 className="line-clamp-2 min-h-[2.75rem] pr-8 text-base font-semibold leading-snug text-slate-900 dark:text-slate-100">
+        {title}
+      </h3>
+      <p className="mt-2 line-clamp-3 min-h-[3.75rem] flex-1 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+        {description}
+      </p>
+
+      <span
+        className={`mt-auto inline-flex w-fit rounded-full px-2.5 py-0.5 pt-4 text-xs font-medium ${styles.badge}`}
+      >
+        {styles.badgeLabel}
+      </span>
+    </motion.div>
   );
 }

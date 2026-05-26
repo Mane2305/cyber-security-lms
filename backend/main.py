@@ -14,6 +14,12 @@ from services.firebase_service import db, auth as auth_client
 from routers import auth
 from routers.modules import router as modules_router
 from routers.quiz import router as quiz_router
+from routers.ai import router as ai_router
+from routers.rewards import router as rewards_router
+from routers.dashboard import router as dashboard_router
+from routers.admin import router as admin_router
+from routers.manager import router as manager_router
+from routers.notifications import router as notifications_router
 
 def seed_data():
     if not db:
@@ -525,6 +531,12 @@ async def generic_exception_handler(request, exc: Exception):
 app.include_router(auth.router)
 app.include_router(modules_router)
 app.include_router(quiz_router)
+app.include_router(ai_router)
+app.include_router(rewards_router)
+app.include_router(dashboard_router)
+app.include_router(admin_router)
+app.include_router(manager_router)
+app.include_router(notifications_router)
 
 @app.get("/")
 def root():

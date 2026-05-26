@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
 import LessonSlide from '../components/LessonSlide';
+import LearningAssistant from '../components/LearningAssistant';
+import ModuleSkeleton from '../components/skeletons/ModuleSkeleton';
 
 function getModuleErrorMessage(err) {
   const detail = err?.response?.data?.detail;
@@ -11,6 +13,12 @@ function getModuleErrorMessage(err) {
   if (err?.response?.status === 404) return 'Module not found.';
   return 'Failed to load module. Please try again.';
 }
+
+const btnSecondary =
+  'rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700';
+
+const btnPrimary =
+  'rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-40';
 
 export default function ModuleViewer() {
   const { module_id } = useParams();
@@ -44,110 +52,67 @@ export default function ModuleViewer() {
   const isLastSlide = totalSlides > 0 && slideIndex === totalSlides - 1;
   const currentSlide = slides[slideIndex];
 
+  if (loading) return <ModuleSkeleton />;
+
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white px-4 py-4 shadow-sm sm:px-8">
-        <div className="mx-auto flex max-w-4xl items-center justify-between">
-          <button
-            type="button"
-            onClick={() => navigate('/dashboard/employee')}
-            className="flex items-center gap-1 text-sm font-medium text-slate-600 transition hover:text-slate-900"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-            </svg>
-            Back to Dashboard
+    <div className="space-y-5">
+      {error && (
+        <div className="text-center">
+          <div className="alert-error mx-auto max-w-md" role="alert">
+            {error}
+          </div>
+          <button type="button" onClick={() => navigate('/dashboard/employee')} className={`mt-5 ${btnSecondary}`}>
+            Back to dashboard
           </button>
-          {module && <h1 className="text-lg font-semibold text-slate-900">{module.title}</h1>}
-          <div className="w-32" />
         </div>
-      </header>
+      )}
 
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-8">
-        {loading && (
-          <div className="flex justify-center py-24">
-            <div
-              className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600"
-              role="status"
-              aria-label="Loading module"
-            />
-          </div>
-        )}
+      {!error && module && (
+        <>
+          <p className="page-lead">{module.title}</p>
 
-        {!loading && error && (
-          <div className="text-center">
-            <div
-              className="mx-auto max-w-md rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-              role="alert"
-            >
-              {error}
+          {totalSlides === 0 ? (
+            <div className="panel px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+              No content available for this module.
             </div>
-            <button
-              type="button"
-              onClick={() => navigate('/dashboard/employee')}
-              className="mt-6 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-white"
-            >
-              Back to Dashboard
-            </button>
-          </div>
-        )}
+          ) : (
+            <>
+              <LessonSlide slide={currentSlide} />
 
-        {!loading && !error && module && (
-          <>
-            {totalSlides === 0 ? (
-              <div className="rounded-xl border border-slate-200 bg-white p-12 text-center shadow-sm">
-                <p className="text-lg text-slate-600">Content coming soon</p>
-              </div>
-            ) : (
-              <>
-                <LessonSlide slide={currentSlide} />
-
-                <div className="mt-6 flex items-center justify-between">
-                  <p className="text-sm font-medium text-slate-600">
-                    Slide {slideIndex + 1} of {totalSlides}
-                  </p>
-                  <button
-                    type="button"
-                    className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-500"
-                    disabled
-                  >
-                    Ask AI — Coming Soon
-                  </button>
-                </div>
-
-                <div className="mt-6 flex items-center justify-between gap-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Slide {slideIndex + 1} of {totalSlides}
+                </p>
+                <div className="flex gap-3">
                   <button
                     type="button"
                     onClick={() => setSlideIndex((i) => i - 1)}
                     disabled={isFirstSlide}
-                    className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                    className={btnSecondary}
                   >
                     Previous
                   </button>
-
                   {isLastSlide ? (
                     <button
                       type="button"
                       onClick={() => navigate(`/quiz/${module_id}`)}
-                      className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
+                      className={btnPrimary}
                     >
-                      Take Quiz
+                      Take quiz
                     </button>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => setSlideIndex((i) => i + 1)}
-                      className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
-                    >
+                    <button type="button" onClick={() => setSlideIndex((i) => i + 1)} className={btnPrimary}>
                       Next
                     </button>
                   )}
                 </div>
-              </>
-            )}
-          </>
-        )}
-      </main>
+              </div>
+            </>
+          )}
+        </>
+      )}
+
+      {!loading && !error && module && <LearningAssistant moduleId={module_id} />}
     </div>
   );
 }
