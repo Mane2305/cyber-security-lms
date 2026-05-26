@@ -174,7 +174,10 @@ export default function ManagerDashboard() {
           <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
             Compliance Report
           </h2>
-          <ComplianceReport />
+          <ComplianceReport
+            endpoint="/api/manager/compliance-report"
+            filenamePrefix="cybershield-team-compliance"
+          />
         </section>
       </div>
     );
