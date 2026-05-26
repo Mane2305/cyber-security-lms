@@ -8,13 +8,70 @@ CyberShield LMS is a modern, AI-powered Cyber Security Learning Management Syste
 * **Database & Auth:** Firebase Firestore & Firebase Authentication
 * **AI Engine:** Groq API (for high-speed, dynamic quiz generation)
 
-## 🤖 How Antigravity Was Utilized
-This project was built collaboratively with **Antigravity** (Google DeepMind's Agentic AI). Antigravity was utilized to:
-* Architect and implement the entire FastAPI backend chunk-by-chunk.
-* Design and enforce the Firestore database schemas and security rules.
-* Integrate Firebase Authentication and role-based access control (Admin, Manager, Employee).
-* Build the AI quiz engine using the Groq API.
-* Debug deployment issues, configure CORS for multiple Vercel preview environments, and Dockerize the backend for Railway.
+## AI-Assisted Development Process
+
+This project was built using a multi-agent AI development workflow — 
+treating AI tools not as autocomplete, but as a structured engineering team.
+
+### The Approach
+
+Instead of building everything manually or relying on a single AI tool, 
+I designed a multi-agent system where each AI had a specific role and 
+ownership boundary. This mirrors how a real engineering team operates.
+
+### Agent Roles
+
+**Claude (Anthropic) — Tech Lead & Architect**
+Claude handled all reasoning, architecture decisions, and planning before 
+any code was written. This included designing the full system architecture, 
+defining all API contracts, designing the Firestore database schema, 
+planning the 7-chunk build strategy, writing agent briefing documents, 
+and making all technical decisions around stack, security, and scalability. 
+No code was written until Claude had specified exactly what needed to be built 
+and why.
+
+**Antigravity — Backend Agent**
+Antigravity executed all backend implementation inside the backend/ folder. 
+Given precise briefings from Claude, it built the FastAPI routes, Firebase 
+Admin SDK integration, Groq AI services, quiz engine, risk scoring, 
+fraud detection, and all Firestore operations. Each session started with 
+the full architecture context so it never made decisions without specification.
+
+**Cursor — Frontend Agent**
+Cursor handled all React implementation inside the frontend/ folder. 
+It built the complete UI including authentication flows, module viewer, 
+quiz interface with animations, all three role dashboards, badge and 
+certificate screens, dark theme, and chart visualizations. Like Antigravity, 
+it operated from precise Claude-written briefings and never touched the backend.
+
+**ChatGPT — Content Agent**
+ChatGPT handled one specific task: formatting the 8 cyber security module 
+contents from the provided document into the exact JavaScript data structure 
+required by the frontend. Content formatting only, no logic.
+
+### How It Worked In Practice
+
+The key insight was that AI agents fail when given too much context at once. 
+The solution was a chunk-based build strategy — 7 focused chunks where each 
+agent received only the context relevant to their current task. After each 
+chunk, a CHUNK_STATUS.md file was updated capturing exactly what was built, 
+what decisions were made, and what the next agent needed to know. This file 
+acted as the memory layer across sessions and agents.
+
+Claude wrote four core documents before any agent touched any code:
+ARCHITECTURE.md, API_CONTRACTS.md, DATABASE_SCHEMA.md, and CHUNK_STATUS.md. 
+Every agent read these before starting. This meant all agents operated from 
+a single source of truth, preventing conflicts, naming inconsistencies, and 
+architectural drift.
+
+### Why This Matters
+
+This workflow demonstrates something beyond just building a feature — it shows 
+how to orchestrate multiple AI systems toward a shared engineering goal. 
+The result is a production-architected platform built faster than any single 
+agent or manual approach could achieve, with clean separation of concerns, 
+consistent code quality, and a codebase that a real engineering team can 
+pick up and extend.
 
 ## 🚀 Setup Instructions
 
