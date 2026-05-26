@@ -38,6 +38,13 @@ def _get_progress(uid: str) -> dict:
     progress_doc = db.collection("employee_progress").document(uid).get()
     return progress_doc.to_dict() if progress_doc.exists else {}
 
+def _get_certificate(progress: dict) -> dict:
+    certificate_id = progress.get("certificate_id")
+    if not certificate_id:
+        return {}
+    certificate_doc = db.collection("certificates").document(certificate_id).get()
+    return certificate_doc.to_dict() if certificate_doc.exists else {}
+
 def _get_modules(tenant_id: str) -> list:
     modules = [
         doc.to_dict()
@@ -340,5 +347,50 @@ def get_team_risk(authorization: str = Header(...)):
             "medium_risk": medium_risk,
             "low_risk": low_risk,
             "team_members": team_members
+        }
+    }
+
+@router.get("/compliance-report")
+def get_team_compliance_report(authorization: str = Header(...)):
+    manager = get_current_user(authorization)
+    _require_manager(manager)
+
+    tenant_id = manager.get("tenant_id", "group-sns")
+    report = []
+
+    for employee_uid in get_manager_team_uids(manager["uid"], tenant_id):
+        employee_doc = db.collection("users").document(employee_uid).get()
+        if not employee_doc.exists:
+            continue
+
+        employee = employee_doc.to_dict()
+        progress = _get_progress(employee_uid)
+        certificate = _get_certificate(progress)
+        certificate_earned = progress.get("certificate_issued", False)
+        certificate_issued_at = (
+            certificate.get("issued_at")
+            or progress.get("certificate_issued_at")
+        )
+
+        report.append({
+            "name": employee.get("name", ""),
+            "email": employee.get("email", ""),
+            "role": employee.get("role", ""),
+            "modules_completed": len(progress.get("modules_completed", [])),
+            "certificate_earned": certificate_earned,
+            "certificate_issued_at": _to_iso(certificate_issued_at),
+            "fraud_flagged": progress.get("fraud_flagged", False),
+            "completion_time_minutes": (
+                certificate.get("total_completion_minutes")
+                if certificate
+                else progress.get("total_completion_minutes")
+            )
+        })
+
+    return {
+        "success": True,
+        "data": {
+            "generated_at": _to_iso(datetime.now(timezone.utc)),
+            "report": report
         }
     }
