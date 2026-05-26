@@ -5,10 +5,21 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
 
+_client = None
+
+def _get_client() -> Groq:
+    global _client
+    if _client is None:
+        api_key = os.environ.get("GROQ_API_KEY")
+        if not api_key:
+            raise Exception("GROQ_API_KEY environment variable is not set")
+        _client = Groq(api_key=api_key)
+    return _client
+
 def call_groq(prompt: str, system_prompt: str, max_tokens: int = 1500) -> str:
+    client = _get_client()
     for attempt in range(2):
         try:
             response = client.chat.completions.create(
