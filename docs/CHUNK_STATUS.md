@@ -52,45 +52,36 @@ What Chunk 2 Needs:
 - axiosInstance imported from utils/axiosInstance.js
 - ProtectedRoute wraps all protected pages
 
-what we defined          what got created
-module_01_phishing       module_01_phishing ✅
-module_02_passwords      module_02_passwords ✅
-module_03_malware        module_03_social_engineering ❌
-module_04_vishing        module_04_data_protection ❌
-module_05_physical_sec   module_05_device_security ❌
-module_06_data_handling  module_06_safe_browsing ❌
-module_07_social_eng     module_07_incident_reporting ❌
 
-*****"module IDs in Firestore differ from schema, reconcile before Chunk 2."******
 ---
 
 ## CHUNK 2 — MODULE VIEWER
 Status: NOT STARTED
 
-Goal: Employee can see all 7 module cards with lock/unlock status and read lesson slides.
+Goal: Employee can see all 8 module cards with lock/unlock status and read lesson slides.
 
 ### Agent Assignments:
 - Antigravity: backend/routers/modules.py (new file), GET /api/modules, GET /api/modules/{module_id}
 - Cursor: frontend/src/pages/EmployeeDashboard.jsx (basic version, just module list), frontend/src/pages/ModuleViewer.jsx, frontend/src/components/ModuleCard.jsx, frontend/src/components/LessonSlide.jsx, frontend/src/components/ProgressBar.jsx
-- ChatGPT: frontend/src/data/modules.js (format all 7 modules from docx into structure defined in DATABASE_SCHEMA.md)
+- ChatGPT: frontend/src/data/modules.js (format all 8 modules from docx into structure defined in DATABASE_SCHEMA.md)
 
 ### What to build:
 
 Backend (Antigravity):
-- GET /api/modules: return all 7 modules with status (locked/unlocked/completed) for the requesting employee
+- GET /api/modules: return all 8 modules with status (locked/unlocked/completed) for the requesting employee
 - GET /api/modules/{module_id}: return full module with slides if employee has it unlocked
 - Read employee_progress document to determine unlock status
 - Return MODULE_LOCKED error if employee requests a locked module
 
 Frontend (Cursor):
-- EmployeeDashboard.jsx: grid of 7 ModuleCard components, shows progress bar at top
+- EmployeeDashboard.jsx: grid of 8 ModuleCard components, shows progress bar at top
 - ModuleCard.jsx: shows module title, description, lock/unlock icon, completion badge if done, click navigates to /module/{module_id}
 - ModuleViewer.jsx: fetches module content, displays slides one at a time, prev/next navigation, shows slide counter (1 of 3), Start Quiz button at end of last slide
 - LessonSlide.jsx: renders single slide with heading, body, key points
-- ProgressBar.jsx: shows X of 7 modules completed as a visual bar
+- ProgressBar.jsx: shows X of 8 modules completed as a visual bar
 
 ### Test criteria before marking COMPLETE:
-- Employee sees 7 module cards, only first one unlocked initially
+- Employee sees 8 module cards, only first one unlocked initially
 - Locked modules show lock icon and are not clickable
 - Clicking unlocked module shows lesson slides
 - Can navigate forward and backward through slides
