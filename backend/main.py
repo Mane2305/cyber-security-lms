@@ -488,13 +488,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-frontend_url_env = os.environ.get("FRONTEND_URL", "http://localhost:5173")
-allow_origins = [url.strip() for url in frontend_url_env.split(",") if url.strip()]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allow_origins,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

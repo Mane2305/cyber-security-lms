@@ -86,7 +86,6 @@ pick up and extend.
 3. Create a `.env` file in the `backend/` directory:
    ```env
    GROQ_API_KEY=your_groq_api_key
-   FRONTEND_URL=http://localhost:5173
    FIREBASE_SERVICE_ACCOUNT_PATH=./serviceAccountKey.json
    ```
 4. Place your `serviceAccountKey.json` in the `backend/` folder.
@@ -102,7 +101,7 @@ pick up and extend.
 4. Start the development server: `npm run dev`
 
 ## 💡 Key Implementation Decisions
-* **Dynamic CORS Handling:** The backend accepts a comma-separated list of origins via the `FRONTEND_URL` environment variable, making it incredibly easy to support multiple Vercel preview domains simultaneously.
+* **Permissive CORS Handling:** The backend allows requests from all frontend origins, which keeps Vercel preview and production deployments working without origin-specific configuration.
 * **On-the-fly AI Quizzes:** Instead of static questions, the platform uses the Groq API to instantly generate relevant quiz questions based on the module's slide content, ensuring employees can't memorize answers.
 * **Stateless Seed Data:** The backend runs a `seed_data()` function on server startup to initialize tenant configuration, modules, and a test employee, perfectly complementing Railway's ephemeral container scaling.
 * **Serverless Firebase Integration:** Using Firebase Auth directly from the frontend while verifying tokens on the FastAPI backend ensures secure, high-performance authentication without maintaining a complex session store.
