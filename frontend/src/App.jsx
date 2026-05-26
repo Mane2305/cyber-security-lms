@@ -5,6 +5,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 import ModuleViewer from './pages/ModuleViewer';
+import QuizPage from './pages/QuizPage';
 
 function App() {
   return (
@@ -24,6 +25,14 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={['employee']}>
             <ModuleViewer />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/quiz/:module_id"
+        element={
+          <ProtectedRoute allowedRoles={['employee']}>
+            <QuizPage />
           </ProtectedRoute>
         }
       />
