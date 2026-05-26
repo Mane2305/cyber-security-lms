@@ -12,6 +12,7 @@ load_dotenv()
 # We need to ensure db is initialized before the app starts if we want to seed data
 from services.firebase_service import db
 from routers import auth
+from routers.modules import router as modules_router
 
 def seed_data():
     if not db:
@@ -36,25 +37,118 @@ def seed_data():
         })
         print("Created tenant document.")
         
-    # Create 7 module placeholders
+    # Delete ALL existing documents in modules collection
     modules_ref = db.collection("modules")
-    
-    # We create 7 basic placeholders. You can expand on this.
-    modules_to_create = [
-        {"id": "module_01_phishing", "title": "Phishing Basics", "order": 1},
-        {"id": "module_02_passwords", "title": "Password Security", "order": 2},
-        {"id": "module_03_social_engineering", "title": "Social Engineering", "order": 3},
-        {"id": "module_04_data_protection", "title": "Data Protection", "order": 4},
-        {"id": "module_05_device_security", "title": "Device Security", "order": 5},
-        {"id": "module_06_safe_browsing", "title": "Safe Browsing", "order": 6},
-        {"id": "module_07_incident_reporting", "title": "Incident Reporting", "order": 7},
+    existing_docs = list(modules_ref.stream())
+    for doc in existing_docs:
+        doc.reference.delete()
+        
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+        
+    modules_data = [
+        {
+            "id": "module_01_phishing",
+            "tenant_id": "group-sns",
+            "title": "Phishing Awareness",
+            "description": "Learn to identify and avoid phishing attacks targeting employees via email",
+            "order": 1,
+            "badge_name": "Phishing Shield",
+            "badge_description": "Awarded for completing phishing awareness training",
+            "slides": [],
+            "created_at": now,
+            "updated_at": now
+        },
+        {
+            "id": "module_02_passwords",
+            "tenant_id": "group-sns",
+            "title": "Passwords & Two-Factor Authentication",
+            "description": "Master strong password practices and secure your accounts with 2FA",
+            "order": 2,
+            "badge_name": "Password Guardian",
+            "badge_description": "Awarded for completing password and 2FA training",
+            "slides": [],
+            "created_at": now,
+            "updated_at": now
+        },
+        {
+            "id": "module_03_malware",
+            "tenant_id": "group-sns",
+            "title": "Malware & Ransomware",
+            "description": "Understand malware threats and how to protect your devices and data",
+            "order": 3,
+            "badge_name": "Malware Defender",
+            "badge_description": "Awarded for completing malware and ransomware training",
+            "slides": [],
+            "created_at": now,
+            "updated_at": now
+        },
+        {
+            "id": "module_04_vishing",
+            "tenant_id": "group-sns",
+            "title": "Vishing & Smishing",
+            "description": "Recognize and respond to phone and SMS-based social engineering attacks",
+            "order": 4,
+            "badge_name": "Voice Defense",
+            "badge_description": "Awarded for completing vishing and smishing training",
+            "slides": [],
+            "created_at": now,
+            "updated_at": now
+        },
+        {
+            "id": "module_05_physical_security",
+            "tenant_id": "group-sns",
+            "title": "Physical & Remote Security",
+            "description": "Secure your physical workspace and remote working environment",
+            "order": 5,
+            "badge_name": "Security Sentinel",
+            "badge_description": "Awarded for completing physical and remote security training",
+            "slides": [],
+            "created_at": now,
+            "updated_at": now
+        },
+        {
+            "id": "module_06_data_handling",
+            "tenant_id": "group-sns",
+            "title": "Data Handling & Compliance",
+            "description": "Learn proper data handling practices and regulatory compliance requirements",
+            "order": 6,
+            "badge_name": "Data Protector",
+            "badge_description": "Awarded for completing data handling and compliance training",
+            "slides": [],
+            "created_at": now,
+            "updated_at": now
+        },
+        {
+            "id": "module_07_social_engineering",
+            "tenant_id": "group-sns",
+            "title": "Social Engineering & Modern Scams",
+            "description": "Identify manipulation tactics and modern social engineering attacks",
+            "order": 7,
+            "badge_name": "Social Shield",
+            "badge_description": "Awarded for completing social engineering training",
+            "slides": [],
+            "created_at": now,
+            "updated_at": now
+        },
+        {
+            "id": "module_08_financial_scams",
+            "tenant_id": "group-sns",
+            "title": "Financial & Cryptocurrency Scams",
+            "description": "Recognize and avoid financial fraud, investment scams, and cryptocurrency attacks targeting employees",
+            "order": 8,
+            "badge_name": "Crypto Guardian",
+            "badge_description": "Awarded for completing financial and cryptocurrency scam training",
+            "slides": [],
+            "created_at": now,
+            "updated_at": now
+        }
     ]
     
-    for mod in modules_to_create:
+    for mod in modules_data:
         doc_ref = modules_ref.document(mod["id"])
-        if not doc_ref.get().exists:
-            doc_ref.set(mod)
-            print(f"Created module document: {mod['id']}")
+        doc_ref.set(mod)
+        print(f"Created module document: {mod['id']}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -107,6 +201,7 @@ async def generic_exception_handler(request, exc: Exception):
 
 # Register routers
 app.include_router(auth.router)
+app.include_router(modules_router)
 
 @app.get("/")
 def root():
